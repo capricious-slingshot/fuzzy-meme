@@ -1,4 +1,5 @@
 const express = require('express')
+const Campsite = require('../models/campsite')
 const campsiteRouter = express.Router()
 
 // route methods when abstracted into own file don't need app.verb - just the verb
@@ -8,48 +9,79 @@ const campsiteRouter = express.Router()
 // ONLY corrisponds to the routes directly below it
 campsiteRouter.route('/')
 
-  // catch all for all HTTP verbs for '/campsites
-  .all((req, res, next) => {
+  .get((req, res, next) => {
+    Campsite.find()
+      .then(campsites => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(campsites)
+      })
+    .catch( err => next(err) )
+  })
+
+  .post( (req, res, next) => {
+    Campsite.create(req.body)
+    .then(campsite => {
+      console.log('Campsite Created: ', campsite)
       res.statusCode = 200
-      res.setHeader('Content-Type', 'text/html')
-      //passes control to the next relevant routing method
-      next()
-  })
-
-  //next possible endpoints - no need for 'next' to be passed
-  .get((req, res) => {
-    //status code and header are inherited from .all method unless otherwise defined
-    res.end('will send all the campsites to you')
-  })
-
-  .post((req, res) => {
-    //status code and header are inherited from .all method unless otherwise defined
-    res.end(`will add the campsite: ${req.body.name} with descripton: ${req.body.description}`)
+      res.setHeader('Content-Type', 'application/json')
+      res.json(campsite)
+    })
+    .catch( err => next(err) )
   })
 
   .put((req, res) => {
-    //status code and header are inherited from .all method unless otherwise defined
     res.statusCode = 403
-    res.end(`campsite: ${req.body.name} description: ${req.body.description}`)
+    res.end('PUT operation not supported on /campsites')
   })
 
-  .delete((req, res) => {
-    res.end('Deleting all campsites')
+  .delete((req, res, next) => {
+    Campsite.deleteMany()
+      .then(response => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(response)
+      })
+    .catch( err => next(err) )
   })
 
 campsiteRouter.route('/:campsiteId')
-  .get((req, res) => {
-    res.end(`Will send details of the campsite: ${req.params.campsiteId} to you`)
+
+  .get((req, res, next) => {
+    Campsite.findById(req.params.campsiteId)
+      .then(campsite => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(campsite)
+      })
+    .catch(err => next(err))
   })
+
   .post((req, res) => {
-    res.end(`PUT opperation not supported on '/campsites/${req.params.campsiteId}`)
+    res.statusCode = 403
+    res.end(`POST operation not supported on /campsites/${req.params.campsiteId}`)
   })
-  .put((req, res) => {
-    res.write(`Updating the campsite: ${req.params.campsiteId}\n`)
-    res.end(`PUT opperation not supported on '/campsites/${req.params.campsiteId}`)
+
+  .put((req, res, next) => {
+    Campsite.findByIdAndUpdate(req.params.campsiteId, {
+        $set: req.body
+    }, { new: true })
+    .then(campsite => {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(campsite)
+    })
+    .catch( err => next(err) )
   })
-  .delete((req, res) => {
-    res.end(`Deleting campsite: ${req.params.campsiteId}`)
+
+  .delete((req, res, next) => {
+    Campsite.findByIdAndDelete(req.params.campsiteId)
+      .then(response => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(response)
+      })
+    .catch( err => next(err) )
   })
 
 module.exports = campsiteRouter

@@ -8,16 +8,26 @@ const app = express()
 const createError = require('http-errors')
 const path = require('path')
 const logger = require('morgan')
-const cookieParser = require('cookie-parser')
+const session = require('express-session')
+//wtf is FileStore? made up madness per usual?
+const FileStore = require('session-file-store')(session)
 
 app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
-// sectret key as agrument - should not be checked in to VC - this school is a fucking joke
-app.use(cookieParser('12345-67890-09876-54321'))
+// sectret key as agrument - should not be checked in to VC
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}))
 
   //AUTHENTICATION
   const auth = (req, res, next) => {
+    console.log(req.session)
+  
     if (!req.signedCookies.user) {
       const authHeader = req.headers.authorization
       if (!authHeader) {
@@ -34,8 +44,8 @@ app.use(cookieParser('12345-67890-09876-54321'))
       const pass = auth[1]
       // basic bitch validation
       if (user === 'admin' && pass === 'password') {
-        //express response api: CookieName, value, config object
-        res.cookie('user', 'admin', {signed: true})
+        //why is this being manually saved to a string and not the value of user?
+        req.session.user = 'admin';
         return next() // authorized
       } else {
         const err = new Error('Authentication Failed')
@@ -44,7 +54,7 @@ app.use(cookieParser('12345-67890-09876-54321'))
         return next(err)
       }
     } else {
-      if (!req.signedCookies.user === 'admin') {
+      if (req.session.user === 'admin') {
         return next() 
       } else {
         const err = new Error('Authentication Failed')

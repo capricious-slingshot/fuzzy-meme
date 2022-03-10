@@ -56,7 +56,7 @@ partnersRouter.route('/:partnerId')
 
   .post((req, res) => {
     res.statusCode = 403
-    res.end(`POST operation not supported on /campsites/${req.params.partnerId}`)
+    res.end(`POST operation not supported on /partners/${req.params.partnerId}`)
   })
 
   .put((req, res, next) => {

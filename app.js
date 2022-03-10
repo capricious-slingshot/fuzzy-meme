@@ -13,33 +13,44 @@ const cookieParser = require('cookie-parser')
 app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
-app.use(cookieParser())
+// sectret key as agrument - should not be checked in to VC - this school is a fucking joke
+app.use(cookieParser('12345-67890-09876-54321'))
 
   //AUTHENTICATION
   const auth = (req, res, next) => {
-    console.log(req.headers)
-    const authHeader = req.headers.authorization
-    if (!authHeader) {
-      const err = new Error('Authentication Failed')
-      // response header to client 'WWW-Authenticate' was requested, and the menthod was 'Basic'
-      res.setHeader('WWW-Authenticate', 'Basic')
-      err.status = 401
-      return next(err)
-    }
-
-    // parse authHeader  - method, encoded string
-    // Buffer - global class via node.js (no need to require) - .from decodes base64
-    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':')
-    const user = auth[0]
-    const pass = auth[1]
-    // basic bitch validation
-    if (user === 'admin' && pass === 'password') {
-      return next() // authorized
+    if (!req.signedCookies.user) {
+      const authHeader = req.headers.authorization
+      if (!authHeader) {
+        const err = new Error('Authentication Failed')
+        // response header to client 'WWW-Authenticate' was requested, and the menthod was 'Basic'
+        res.setHeader('WWW-Authenticate', 'Basic')
+        err.status = 401
+        return next(err)
+      }
+      // parse authHeader  - method, encoded string
+      // Buffer - global class via node.js (no need to require) - .from decodes base64
+      const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':')
+      const user = auth[0]
+      const pass = auth[1]
+      // basic bitch validation
+      if (user === 'admin' && pass === 'password') {
+        //express response api: CookieName, value, config object
+        res.cookie('user', 'admin', {signed: true})
+        return next() // authorized
+      } else {
+        const err = new Error('Authentication Failed')
+        res.setHeader('WWW-Authenticate', 'Basic')
+        err.status = 401
+        return next(err)
+      }
     } else {
-      const err = new Error('Authentication Failed')
-      res.setHeader('WWW-Authenticate', 'Basic')
-      err.status = 401
-      return next(err)
+      if (!req.signedCookies.user === 'admin') {
+        return next() 
+      } else {
+        const err = new Error('Authentication Failed')
+        err.status = 401
+        return next(err)
+      }
     }
   }
 
@@ -88,7 +99,7 @@ app.set('view engine', 'jade')
 app.use((req, res, next) => next(createError(404)))
 
 // set locals, only providing error in development
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   res.locals.message = err.message
   res.locals.error = req.app.get('env') === 'development' ? err : {}
 

@@ -3,6 +3,9 @@
 const express = require('express')
 const app = express()
 
+//PASSPORT
+const passport = require('passport')
+const authenticate = require('./authenticate')
 
 // MIDDLEWEAR - ordering applies to execution sequence
 const createError = require('http-errors')
@@ -15,6 +18,9 @@ const FileStore = require('session-file-store')(session)
 app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use(passport.initialize())
+app.use(passport.session())
+
 // sectret key as agrument - should not be checked in to VC
 app.use(session({
   name: 'session-id',
@@ -39,20 +45,14 @@ app.use('/partners', partnerRouter)
 
 //AUTHENTICATION
 const auth = (req, res, next) => {
-  console.log(req.session)
+  console.log(req.user)
 
-  if (!req.session.user) {
+  if (!req.user) {
     const err = new Error('Authentication Failed')
     err.status = 401
     return next(err)
   } else {
-    if (req.session.user === 'authenticated') {
-      return next() 
-    } else {
-      const err = new Error('Authentication Failed')
-      err.status = 401
-      return next(err)
-    }
+    return next()
   }
 }
 

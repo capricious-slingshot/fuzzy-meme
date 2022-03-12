@@ -1,68 +1,39 @@
 const express = require('express')
 const User = require('../models/user')
 const router = express.Router()
+const passport = require('passport')
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource')
 }) 
 
-router.post('/signup', (req, res, next) => {
-  User.findOne({username: req.body.username})
-  .then(user => {
-    if (user) {
-      const err = new Error(`User ${req.body.username} already exists!`)
-      err.status = 403
-      return next(err)
-    } else {
-      User.create({
-        username: req.body.username,
-        password: req.body.password})
-      .then(user => {
-        res.statusCode = 200
+router.post('/signup', (req, res) => {
+  User.register(
+    new User({username: req.body.username}),
+    req.body.password,
+    err => {
+      if (err) {
+        res.statusCode = 500
         res.setHeader('Content-Type', 'application/json')
-        res.json({status: 'Registration Successful!', user: user})
-      })
-      .catch(err => next(err))
+        res.json({err: err})
+      } else {
+        passport.authenticate('local')(req, res, () => {
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.json({success: true, status: 'Registration Successful!'})
+        })
+      }
     }
-  })
-  .catch(err => next(err))
+  )
 })
 
-router.post('/login', (req, res, next) => {
-  if(!req.session.user) {
-    const authHeader = req.headers.authorization
-
-    if (!authHeader) {
-      const err = new Error('Please Log In to continue')
-      res.setHeader('WWW-Authenticate', 'Basic')
-      err.status = 401
-      return next(err)
-    }
-  
-    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':')
-    const username = auth[0]
-    const password = auth[1]
-  
-    User.findOne({username: username})
-    .then(user => {
-      if (!user || user.password !== password) {
-        const err = new Error('Incorrect Credientals')
-        err.status = 401
-        return next(err)
-      } else if (user.username === username && user.password === password) {
-        req.session.user = 'authenticated'
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'text/plain')
-        res.end('Login Successful')
-      }
-    })
-    .catch(err => next(err))
-  } else {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/plain')
-    res.end('You are already Logged In')
-  }
+//multiple kinds of middlewear can be passed to a route after path
+//password.authenticate only attaches the user to the request obj and passes on request if valid
+router.post('/login', passport.authenticate('local'), (req, res) => {
+  res.statusCode = 200
+  res.setHeader('Content-Type', 'application/json')
+  res.json({success: true, status: 'You are successfully logged in!'})
 })
 
 router.get('/logout', (req, res, next) => {

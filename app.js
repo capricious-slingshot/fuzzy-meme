@@ -24,48 +24,39 @@ app.use(session({
   store: new FileStore()
 }))
 
-  //AUTHENTICATION
-  const auth = (req, res, next) => {
-    console.log(req.session)
-  
-    if (!req.signedCookies.user) {
-      const authHeader = req.headers.authorization
-      if (!authHeader) {
-        const err = new Error('Authentication Failed')
-        // response header to client 'WWW-Authenticate' was requested, and the menthod was 'Basic'
-        res.setHeader('WWW-Authenticate', 'Basic')
-        err.status = 401
-        return next(err)
-      }
-      // parse authHeader  - method, encoded string
-      // Buffer - global class via node.js (no need to require) - .from decodes base64
-      const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':')
-      const user = auth[0]
-      const pass = auth[1]
-      // basic bitch validation
-      if (user === 'admin' && pass === 'password') {
-        //why is this being manually saved to a string and not the value of user?
-        req.session.user = 'admin';
-        return next() // authorized
-      } else {
-        const err = new Error('Authentication Failed')
-        res.setHeader('WWW-Authenticate', 'Basic')
-        err.status = 401
-        return next(err)
-      }
+// ROUTING MIDDDLE WARE
+const indexRouter = require('./routes/index')
+const usersRouter = require('./routes/users')
+const campsiteRouter = require('./routes/campsitesRouter')
+const promotionRouter = require('./routes/promotionsRouter')
+const partnerRouter = require('./routes/partnersRouter')
+
+app.use('/', indexRouter)
+app.use('/users', usersRouter)
+app.use('/campsites', campsiteRouter)
+app.use('/promotions', promotionRouter)
+app.use('/partners', partnerRouter)
+
+//AUTHENTICATION
+const auth = (req, res, next) => {
+  console.log(req.session)
+
+  if (!req.session.user) {
+    const err = new Error('Authentication Failed')
+    err.status = 401
+    return next(err)
+  } else {
+    if (req.session.user === 'authenticated') {
+      return next() 
     } else {
-      if (req.session.user === 'admin') {
-        return next() 
-      } else {
-        const err = new Error('Authentication Failed')
-        err.status = 401
-        return next(err)
-      }
+      const err = new Error('Authentication Failed')
+      err.status = 401
+      return next(err)
     }
   }
+}
 
-  app.use(auth)
-
+app.use(auth)
 app.use(express.static(path.join(__dirname, 'public')))
 
 
@@ -80,24 +71,9 @@ const connect = mongoose.connect(url, {
   useUnifiedTopology: true
 })
 
-connect.then(() => console.log('Connected correctly to server'), 
+connect.then(() => console.log('Connected correctly to server'),
     err => console.log(err)
 )
-
-
-// ROUTING MIDDDLE WARE
-const indexRouter = require('./routes/index')
-const usersRouter = require('./routes/users')
-const campsiteRouter = require('./routes/campsitesRouter')
-const promotionRouter = require('./routes/promotionsRouter')
-const partnerRouter = require('./routes/partnersRouter')
-
-app.use('/', indexRouter)
-app.use('/users', usersRouter)
-app.use('/campsites', campsiteRouter)
-app.use('/promotions', promotionRouter)
-app.use('/partners', partnerRouter)
-
 
 // VIEW MIDDLEWEAR
 app.set('views', path.join(__dirname, 'views'))

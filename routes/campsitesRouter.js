@@ -71,9 +71,6 @@ campsiteRouter.route('/:campsiteId')
       if (campsite) {
         req.body.author = req.user._id
         campsite.comments.push(req.body)
-      } else {
-        res.statusCode = 403
-        res.end(`POST operation not supported on /campsites/${req.params.campsiteId}`)
       }
     })
     .catch(err => next(err))
@@ -105,18 +102,19 @@ campsiteRouter.route('/:campsiteId/comments')
 
   .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
-      .then(campsite => {
-        if (campsite) {
-          res.statusCode = 200
-          res.setHeader('Content-Type', 'application/json')
-          res.json(campsite.comments)
-        } else {
-          err = new Error(`Campsite ${req.params.campsiteId} not found`)
-          //why is this not res.statusCode?
-          err.status = (404)
-          return next(err)
-        }
-      })
+    .populate('comments.author')
+    .then(campsite => {
+      if (campsite) {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(campsite.comments)
+      } else {
+        err = new Error(`Campsite ${req.params.campsiteId} not found`)
+        //why is this not res.statusCode?
+        err.status = (404)
+        return next(err)
+      }
+    })
     .catch( err => next(err) )
   })
 

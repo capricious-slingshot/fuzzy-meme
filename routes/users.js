@@ -19,6 +19,8 @@ router.post('/signup', (req, res) => {
         res.setHeader('Content-Type', 'application/json')
         res.json({err: err})
       } else {
+        //aren't these required fields for registration? if so this should be written differently
+        // where does the responsibility lie for form validaion?
         if (req.body.firstname) { user.firstname = req.body.firstname }
         if (req.body.lastname) { user.lastname = req.body.lastname }
 

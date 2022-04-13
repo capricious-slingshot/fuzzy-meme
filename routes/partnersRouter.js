@@ -7,23 +7,23 @@ partnersRouter.route('/')
 
   .get((req, res, next) => {
     Partner.find()
-      .then( partners => {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(partners)
-      })
-      .catch( err => next(err) )
+    .then( partners => {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(partners)
+    })
+    .catch( err => next(err) )
   })
 
   .post((req, res, next) => {
     Partner.create(req.body)
-      .then(partner => {
-        console.log('partner Created: ', partner)
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(partner)
-      })
-      .catch(err => next(err))
+    .then(partner => {
+      console.log('partner Created: ', partner)
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(partner)
+    })
+    .catch(err => next(err))
   })
 
   .put((req, res) => {
@@ -34,11 +34,11 @@ partnersRouter.route('/')
 
   .delete((req, res) => {
     Partner.deleteMany()
-      .then(response => {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(response)
-      })
+    .then(response => {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(response)
+    })
     .catch( err => next(err) )
   })
 
@@ -46,11 +46,11 @@ partnersRouter.route('/:partnerId')
 
   .get((req, res, next) => {
     Partner.findById(req.params.partnerId)
-      .then(partner => {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(partner)
-      })
+    .then(partner => {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(partner)
+    })
     .catch(err => next(err))
   })
 
@@ -73,11 +73,11 @@ partnersRouter.route('/:partnerId')
 
   .delete((req, res, next) => {
     Partner.findByIdAndDelete(req.params.partnerId)
-      .then(response => {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(response)
-      })
+    .then(response => {
+      res.statusCode = 200
+      res.setHeader('Content-Type', 'application/json')
+      res.json(response)
+    })
     .catch( err => next(err) )
   })
 

@@ -1,5 +1,5 @@
 const config = require('./config')
-const url = config.mongoUrl
+// const url = config.mongoUrl
 
 // EXPRESS
 const express = require('express')

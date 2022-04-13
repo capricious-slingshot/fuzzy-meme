@@ -11,6 +11,7 @@ campsiteRouter.route('/')
 
   .get((req, res, next) => {
     Campsite.find()
+      .populate('comments.author')
       .then(campsites => {
         res.statusCode = 200
         res.setHeader('Content-Type', 'application/json')
@@ -49,17 +50,33 @@ campsiteRouter.route('/:campsiteId')
 
   .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+      .populate('comments.author')
       .then(campsite => {
-        res.statusCode = 200
-        res.setHeader('Content-Type', 'application/json')
-        res.json(campsite)
+        if (campsite) {
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.json(campsite)
+        } else {
+          err = new Error(`Campsite ${req.params.campsiteId} not found`)
+          err.status = 404
+          return next(err)
+        }
       })
     .catch(err => next(err))
   })
 
-  .post((req, res) => {
-    res.statusCode = 403
-    res.end(`POST operation not supported on /campsites/${req.params.campsiteId}`)
+  .post(authenticate.verifyUser, (req, res) => {
+    Campsite.findById(req.params.campsiteId)
+    .then(campsite => {
+      if (campsite) {
+        req.body.author = req.user._id
+        campsite.comments.push(req.body)
+      } else {
+        res.statusCode = 403
+        res.end(`POST operation not supported on /campsites/${req.params.campsiteId}`)
+      }
+    })
+    .catch(err => next(err))
   })
 
   .put((req, res, next) => {
@@ -158,23 +175,24 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
 
   .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
-      .then(campsite => {
-        if (campsite && campsite.comments.id(req.params.commentId)) {
-          res.statusCode = 200
-          res.setHeader('Content-Type', 'application/json')
-          res.json(campsite.comments.id(req.params.commentId))
-        } else if (!campsite) {
-          err = new Error(`Campsite ${req.params.campsiteId} not found`)
-          //why is this not res.statusCode?
-          err.status = (404)
-          return next(err)
-        } else {
-          err = new Error(`Comment ${req.params.commentId} not found`)
-          //why is this not res.statusCode?
-          err.status = (404)
-          return next(err)
-        }
-      })
+    .populate('comments.author')
+    .then(campsite => {
+      if (campsite && campsite.comments.id(req.params.commentId)) {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        res.json(campsite.comments.id(req.params.commentId))
+      } else if (!campsite) {
+        err = new Error(`Campsite ${req.params.campsiteId} not found`)
+        //why is this not res.statusCode?
+        err.status = (404)
+        return next(err)
+      } else {
+        err = new Error(`Comment ${req.params.commentId} not found`)
+        //why is this not res.statusCode?
+        err.status = (404)
+        return next(err)
+      }
+    })
     .catch( err => next(err) )
   })
 

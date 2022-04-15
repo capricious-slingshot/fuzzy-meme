@@ -45,10 +45,10 @@ router.post('/signup', (req, res) => {
 //multiple kinds of middlewear can be passed to a route after path
 //password.authenticate only attaches the user to the request obj and passes on request if valid
 router.post('/login', passport.authenticate('local'), (req, res) => {
-  const token = authenticate.getToken({_id: req.user._id})
+  const token = authenticate.getToken({ _id: req.user._id })
   res.statusCode = 200
   res.setHeader('Content-Type', 'application/json')
-  res.json({success: true, token: token, status: 'You are successfully logged in!'})
+  res.json({ success: true, token: token, status: 'Login Successful!' })
 })
 
 router.get('/logout', (req, res, next) => {

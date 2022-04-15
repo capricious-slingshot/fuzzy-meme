@@ -17,9 +17,7 @@ passport.serializeUser(User.serializeUser())
 //after succussful authentication, deserialized before attaching User to req obj
 passport.deserializeUser(User.deserializeUser())
 
-exports.getToken = function(user) {
-    return jwt.sign(user, config.secretKey, {expiresIn: 3600})
-}
+exports.getToken = (user) => jwt.sign(user, config.secretKey, { expiresIn: 3600 })
 
 const opts = {}
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken()
@@ -30,7 +28,7 @@ exports.jwtPassport = passport.use(
     opts,
     (jwt_payload, done) => {
       console.log('JWT payload:', jwt_payload)
-      User.findOne({_id: jwt_payload._id}, (err, user) => {
+      User.findOne({ _id: jwt_payload._id }, (err, user) => {
         if (err) {
           return done(err, false)
         } else if (user) {
@@ -43,4 +41,4 @@ exports.jwtPassport = passport.use(
   )
 )
 
-exports.verifyUser = passport.authenticate('jwt', {session: false})
+exports.verifyUser = passport.authenticate('jwt', { session: false })

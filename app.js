@@ -1,14 +1,25 @@
 const config = require('./config')
 // const url = config.mongoUrl
 
+
 // EXPRESS
 const express = require('express')
 const app = express()
 
+  // Secure traffic only
+  app.all('*', (req, res, next) => {
+    if (req.secure) {
+      return next()
+    } else {
+      console.log(`Redirecting to: https://${req.hostname}:${app.get('secPort')}${req.url}`)
+      res.redirect(301, `https://${req.hostname}:${app.get('secPort')}${req.url}`)
+    }
+  })
+
 //PASSPORT
 const passport = require('passport')
 
-// MIDDLEWEAR - ordering applies to execution sequence
+//MIDDLEWEAR - ordering applies to execution sequence
 const createError = require('http-errors')
 const path = require('path')
 const logger = require('morgan')

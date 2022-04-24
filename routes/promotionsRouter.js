@@ -29,7 +29,7 @@ promotionsRouter.route('/')
     .catch( err => next(err) )
   })
 
-  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
+  .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     res.statusCode = 403
     res.end('PUT operation not supported on /promotions')
   })
@@ -57,14 +57,14 @@ promotionsRouter.route('/:promotionId')
     .catch(err => next(err))
   })
 
-  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
+  .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     res.statusCode = 403
     res.end(`POST opperation not supported on '/promotions/${req.params.promotionId}`)
   })
 
   .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     Promotion.findByIdAndUpdate(req.params.promotionId, {
-        $set: req.body
+      $set: req.body
     }, { new: true })
     .then(promotion => {
       res.statusCode = 200

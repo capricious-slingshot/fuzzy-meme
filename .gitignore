@@ -3,3 +3,4 @@ node-mongoose
 mongodb
 bin/server.key
 bin/server.cert
+config.js

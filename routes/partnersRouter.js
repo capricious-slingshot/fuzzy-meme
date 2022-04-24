@@ -2,9 +2,11 @@ const express = require('express')
 const Partner = require('../models/partner')
 const authenticate = require('../authenticate')
 const partnersRouter = express.Router()
+const cors = require('./cors')
 
 
 partnersRouter.route('/')
+  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
 
   .get((req, res, next) => {
     Partner.find()
@@ -44,8 +46,9 @@ partnersRouter.route('/')
   })
 
 partnersRouter.route('/:partnerId')
+  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
 
-  .get((req, res, next) => {
+  .get(cors.cors, (req, res, next) => {
     Partner.findById(req.params.partnerId)
     .then(partner => {
       res.statusCode = 200
@@ -55,12 +58,12 @@ partnersRouter.route('/:partnerId')
     .catch(err => next(err))
   })
 
-  .post(authenticate.verifyUser, (req, res) => {
+  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
     res.statusCode = 403
     res.end(`POST operation not supported on /partners/${req.params.partnerId}`)
   })
 
-  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+  .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Partner.findByIdAndUpdate(req.params.partnerId, {
         $set: req.body
     }, { new: true })
@@ -72,7 +75,7 @@ partnersRouter.route('/:partnerId')
     .catch( err => next(err) )
   })
 
-  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+  .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Partner.findByIdAndDelete(req.params.partnerId)
     .then(response => {
       res.statusCode = 200

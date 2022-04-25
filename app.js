@@ -39,6 +39,7 @@ const campsiteRouter = require('./routes/campsitesRouter')
 const promotionRouter = require('./routes/promotionsRouter')
 const partnerRouter = require('./routes/partnersRouter')
 const uploadRouter = require('./routes/uploadRouter')
+const favoriteRouter = require('./routes/favoriteRouter')
 
 app.use('/', indexRouter)
 app.use('/imageUpload', uploadRouter)
@@ -46,6 +47,7 @@ app.use('/users', usersRouter)
 app.use('/campsites', campsiteRouter)
 app.use('/promotions', promotionRouter)
 app.use('/partners', partnerRouter)
+app.use('/favorites', favoriteRouter)
 
 //does this really need to appear in the file before the inner routes? seems very disorganized
 app.use(express.static(path.join(__dirname, 'public')))
